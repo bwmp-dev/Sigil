@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0 (2026-08-10)
+
+
+### Features
+
+* initial release of Sigil ([ffc3c5a](https://github.com/bwmp-dev/Sigil/commit/ffc3c5a1623bc4f8375e24cacea6b3eea6cbd71e))
+
+## Changelog
+
 Notable changes to Sigil. Versions follow [semantic versioning](https://semver.org);
 `sigil-api` is the surface that version promises apply to.
 
