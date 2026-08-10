@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        Parented to keystone-parent, not to Sigil's aggregator: that is what
+        supplies the shade plugin and the Keystone/Adventure relocations.
+    -->
+    <!--
+        relativePath is deliberately empty, which forces Maven to resolve the
+        parent from a repository rather than from a path on disk.
+
+        It used to point at ../../Keystone, which only exists in the monorepo
+        this was developed in. A fresh clone of just this repository would warn
+        on every build about a parent that is not where it was told to look.
+
+        Keystone is now published, so this resolves from nexus.bwmp.dev like any
+        other dependency - no local install needed. One caveat: Maven reads a
+        parent before it reads the project's own <repositories>, so the Nexus
+        repository has to be known from settings.xml. See the README.
+
+        Deliberately carries no release-please annotation. This version belongs
+        to another repository, and annotating it would bump it in step with
+        Sigil - pointing at a Keystone release that does not exist. The token
+        itself is left unwritten here on purpose: the updater matches it by
+        raw string, so naming it even inside a comment is a hazard.
+    -->
+    <parent>
+        <groupId>dev.bwmp</groupId>
+        <artifactId>keystone-parent</artifactId>
+        <version>1.0.2</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>dev.bwmp</groupId>
+    <artifactId>sigil-plugin</artifactId>
+    <version>0.1.0-SNAPSHOT</version> <!-- x-release-please-version -->
+    <packaging>jar</packaging>
+
+    <name>Sigil Plugin</name>
+
+    <properties>
+        <keystone.libs.package>dev.bwmp.sigil.libs</keystone.libs.package>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>dev.bwmp</groupId>
+            <artifactId>sigil-api</artifactId>
+            <version>0.1.0-SNAPSHOT</version> <!-- x-release-please-version -->
+        </dependency>
+        <dependency>
+            <groupId>dev.bwmp</groupId>
+            <artifactId>keystone-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>Sigil-${project.version}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>plugin.yml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>plugin.yml</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
+</project>

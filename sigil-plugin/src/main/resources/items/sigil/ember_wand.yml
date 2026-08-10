@@ -1,0 +1,58 @@
+# A worked example of an item defined entirely in YAML.
+#
+# There is no Java class behind this one. Everything below - including its
+# behaviour - comes from this file, which is what lets a server add new items
+# without touching code.
+#
+# Copy this file, rename it, and it becomes a new item. The filename is the id,
+# and the folder is the namespace: this is sigil:ember_wand.
+
+enabled: true
+
+display: "<#ff8844>Ember Wand"
+base: BLAZE_ROD
+rarity: rare
+description:
+  - "Flings a mote of fire."
+
+uses:
+  type: limited
+  max: 64
+  delete-at-zero: true
+
+rules:
+  enchanting: false
+  anvil-rename: false
+
+# Each entry names a registered ability type and configures it. Run
+# /sigil info sigil:ember_wand to see the result.
+#
+# Built-in types: launch, projectile, potion, heal, area_break, smite
+# Common keys for all of them:
+#   trigger         right_click, left_click, block_break, damage_entity,
+#                   swap_hands, drop, consume_item, tick, ...
+#   cooldown        "2s", "500ms", "1m", or a plain number of seconds
+#   cooldown-scope  player, stack or global
+#   sneaking        true to require sneaking, false to forbid it
+#   target          air, block, entity or any
+abilities:
+  - type: sigil:projectile
+    id: firebolt
+    name: "Firebolt"
+    description: "Launch a small fireball."
+    trigger: right_click
+    cooldown: 2s
+    projectile: SMALL_FIREBALL
+    speed: 1.6
+    sound: ENTITY_BLAZE_SHOOT
+
+recipe:
+  type: shaped
+  amount: 1
+  shape:
+    - "  B"
+    - " I "
+    - "I  "
+  keys:
+    B: BLAZE_POWDER
+    I: sigil:aether_ingot

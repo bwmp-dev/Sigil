@@ -1,0 +1,82 @@
+# Sigil
+#
+# Items live in items/<namespace>/<id>.yml. Each registered item writes its own
+# file on first run; Sigil never overwrites one once it exists.
+#
+# A file naming an id that has no code behind it defines a whole new item -
+# see items/sigil/ember_wand.yml for a worked example.
+#
+# /sigil reload applies changes. Items already in players' inventories update
+# themselves the next time they are looked at.
+
+content:
+  # Turn off to keep only your own items.
+  builtin: true
+
+# How lore is laid out. Tokens are replaced; an empty string is a separator that
+# collapses when the section around it renders to nothing.
+#   <description>  the item's description lines
+#   <abilities>    name, description and cooldown of each ability
+#   <uses>         remaining/maximum charges, omitted for unlimited items
+#   <rarity>       the rarity name in its own colour
+# Any other line is passed through as MiniMessage.
+lore-template:
+  - "<description>"
+  - ""
+  - "<abilities>"
+  - ""
+  - "<uses>"
+  - ""
+  - "<rarity>"
+
+# Add, remove or recolour freely. 'order' controls sorting in menus and /sigil
+# list; 'glow' gives an enchantment shimmer.
+rarities:
+  common:
+    display: "Common"
+    colour: "<#04ff00>"
+    order: 0
+  uncommon:
+    display: "Uncommon"
+    colour: "<#009b02>"
+    order: 1
+  rare:
+    display: "Rare"
+    colour: "<#00b0ff>"
+    order: 2
+  epic:
+    display: "Epic"
+    colour: "<#9b00ff>"
+    order: 3
+    glow: true
+  legendary:
+    display: "Legendary"
+    colour: "<#ffbe39>"
+    order: 4
+    glow: true
+
+abilities:
+  # How often TICK abilities are polled. The loop does not run at all unless
+  # some registered item actually uses that trigger.
+  tick-interval: 4
+  # Show cooldown messages on the action bar rather than in chat.
+  cooldown-actionbar: true
+  # Also drive the vanilla grey cooldown sweep on the item itself.
+  vanilla-cooldown-overlay: true
+
+# Server-wide defaults. Any item may override these in its own file; an item
+# that says nothing follows whatever is set here.
+rules:
+  # Allow custom items to be used as ingredients in ordinary vanilla recipes.
+  # Off by default: otherwise an Aether Ingot crafts into a plain iron block and
+  # its identity is gone.
+  vanilla-recipes: false
+  # Allow renaming in an anvil. Off by default so custom items cannot be
+  # disguised as something else.
+  anvil-rename: false
+  # Allow combining two of the same item to sum their remaining charges.
+  anvil-combine: true
+  # Levels charged for that combine.
+  anvil-combine-cost: 5
+  # Allow enchanting at an enchantment table.
+  enchanting: false

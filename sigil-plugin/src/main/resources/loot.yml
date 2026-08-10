@@ -1,0 +1,62 @@
+# Custom items added when a vanilla loot table is rolled. Each entry rolls
+# independently. "table" matches Bukkit's loot-table key. "source" matches a
+# marker placed on a Terra structure chest; use either selector or both.
+enabled: true
+
+entries:
+  # Vanilla structures
+  - table: minecraft:chests/abandoned_mineshaft
+    item: sigil:aether_nugget
+    chance: 0.18
+    min: 2
+    max: 5
+
+  - table: minecraft:chests/simple_dungeon
+    item: sigil:raw_aether
+    chance: 0.12
+    min: 1
+    max: 2
+
+  - table: minecraft:chests/end_city_treasure
+    item: skyward:wayfinder_sigil
+    chance: 0.025
+    min: 1
+    max: 1
+
+  - table: minecraft:chests/end_city_treasure
+    item: skyward:voidward_charm
+    chance: 0.04
+    min: 1
+    max: 1
+
+  # Terra structures tagged by the Aether pack
+  - source: terra:abandoned_house
+    item: sigil:aether_nugget
+    chance: 0.22
+    min: 2
+    max: 6
+
+  - source: terra:mob_room
+    item: sigil:raw_aether
+    chance: 0.18
+    min: 1
+    max: 3
+
+  - source: terra:valkyrie_temple
+    item: skyward:updraft_totem
+    chance: 0.06
+    min: 1
+    max: 1
+
+  - source: terra:valkyrie_temple
+    item: sigil:aether_ingot
+    chance: 0.30
+    min: 1
+    max: 2
+
+  - source: terra:ancient_aether_tower
+    item: skyward:gale_charm
+    chance: 0.08
+    min: 1
+    max: 1
+

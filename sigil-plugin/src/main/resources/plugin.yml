@@ -1,0 +1,44 @@
+name: Sigil
+version: '${project.version}'
+main: dev.bwmp.sigil.SigilPlugin
+api-version: '1.18'
+authors: [ bwmp ]
+description: Custom items, materials, abilities and recipes.
+softdepend: [ PlaceholderAPI ]
+
+# Folia refuses to load any plugin that does not declare this, so the scheduler
+# abstraction would never get the chance to prove itself without it. The claim
+# is backed by there being no BukkitRunnable or Bukkit.getScheduler() call in
+# the plugin: everything goes through Keystone's scheduler, cooldowns are on a
+# ConcurrentHashMap, and the item registry is an immutable snapshot swapped
+# behind a volatile reference.
+folia-supported: true
+
+commands:
+  sigil:
+    description: Manage Sigil items
+    aliases: [ sg ]
+    usage: /sigil help
+
+permissions:
+  sigil.command.give:
+    description: Give Sigil items
+    default: op
+  sigil.command.reload:
+    description: Reload Sigil
+    default: op
+  sigil.command.refresh:
+    description: Re-render items against the current config
+    default: op
+  sigil.command.platform:
+    description: Show platform diagnostics
+    default: op
+  sigil.command.list:
+    description: List registered items
+    default: true
+  sigil.command.info:
+    description: Inspect an item definition
+    default: true
+  sigil.command.menu:
+    description: Open the item browser
+    default: true

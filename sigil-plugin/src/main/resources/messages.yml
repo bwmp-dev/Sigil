@@ -1,0 +1,21 @@
+# All messages are MiniMessage. https://docs.advntr.dev/minimessage/format.html
+#
+# Placeholders such as <item> and <player> are inserted as literal text, never
+# re-parsed, so a player-supplied name cannot smuggle formatting or a click
+# event into a message.
+
+prefix: "<dark_gray>[<gradient:#00b0ff:#9b00ff>Sigil</gradient><dark_gray>] "
+
+usage: "<gray>Use <yellow>/sigil help<gray> for a list of commands."
+no-permission: "<red>You do not have permission to do that."
+player-only: "<red>That command can only be used in game."
+
+unknown-item: "<red>No such item: <white><item>"
+unknown-player: "<red>No such player: <white><player>"
+no-recipe: "<gray>No recipe for <white><item><gray>."
+
+given: "<gray>Gave <white><amount>x <white><item> <gray>to <white><player><gray>."
+reloaded: "<green>Reloaded. <gray><count> item(s) registered."
+refreshed: "<gray>Refreshed <white><count><gray> item(s)."
+
+cooldown: "<gray>Ready in <white><time>s<gray>."
