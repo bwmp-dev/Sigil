@@ -55,4 +55,4 @@ recipe:
     - "I  "
   keys:
     B: BLAZE_POWDER
-    I: sigil:aether_ingot
+    I: IRON_INGOT
