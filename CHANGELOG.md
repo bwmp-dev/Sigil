@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/bwmp-dev/Sigil/compare/v1.0.0...v1.1.0) (2026-08-14)
+
+
+### Features
+
+* add bStats and telemetry metrics ([bcc14ca](https://github.com/bwmp-dev/Sigil/commit/bcc14cae1a0514d31293e7ecf00c4c3d91121a21))
+* expand the add-on API ([e6836be](https://github.com/bwmp-dev/Sigil/commit/e6836be812b3e706113007b916699ad77bda6394))
+
 ## 1.0.0 (2026-08-10)
 
 
