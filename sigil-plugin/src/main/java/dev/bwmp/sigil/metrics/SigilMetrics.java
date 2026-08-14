@@ -70,7 +70,6 @@ public final class SigilMetrics {
         return total;
     }
 
-    /** The plugins built on Sigil, which is what decides whether the API is worth keeping. */
     private static Map<String, Integer> addons(SigilPlugin plugin) {
         String name = plugin.getName();
         Map<String, Integer> found = new LinkedHashMap<>();

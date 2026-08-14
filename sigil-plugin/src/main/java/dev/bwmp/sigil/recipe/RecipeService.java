@@ -172,7 +172,6 @@ public final class RecipeService {
         registered.add(key);
     }
 
-    /** A permissive choice; strict identity is enforced by {@link #strictMatch}. */
     private RecipeChoice choiceFor(Ingredient ingredient) {
         if (ingredient instanceof Ingredient.Tag tag) {
             return tag.materials().isEmpty()

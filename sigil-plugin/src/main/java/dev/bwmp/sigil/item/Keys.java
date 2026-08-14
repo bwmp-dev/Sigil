@@ -16,7 +16,6 @@ public final class Keys {
     /** The item's namespaced id. The only identity. */
     public final NamespacedKey id;
 
-    /** Definition revision the stack was last rendered against. */
     public final NamespacedKey revision;
 
     /** Remaining uses. Absent means unlimited. */

@@ -51,7 +51,6 @@ public final class PlayerWatchService {
     private final JavaPlugin plugin;
     private final int intervalTicks;
 
-    /** Last armour seen for each player, so a change can be detected. */
     private final Map<UUID, ItemStack[]> lastArmour = new ConcurrentHashMap<>();
     private final QuitListener quitListener = new QuitListener();
 
@@ -185,7 +184,6 @@ public final class PlayerWatchService {
         dispatcher.dispatch(player, stack, trigger, slot, TriggerBinding.Target.ANY, null, null, null);
     }
 
-    /** Stops a departed player's armour lingering in the map forever. */
     private final class QuitListener implements Listener {
         @EventHandler
         public void onQuit(PlayerQuitEvent event) {

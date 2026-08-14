@@ -7,6 +7,7 @@ import dev.bwmp.sigil.api.item.CustomItem;
 import dev.bwmp.sigil.api.item.ItemDefinition;
 import dev.bwmp.sigil.api.item.Rarity;
 import dev.bwmp.sigil.api.loot.LootRule;
+import dev.bwmp.sigil.api.visual.DisplayService;
 import dev.bwmp.sigil.item.SigilItem;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
@@ -18,7 +19,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-/** The service other plugins receive from Bukkit's service manager. */
 public final class SigilApiImpl implements SigilAPI {
 
     private final SigilPlugin plugin;
@@ -74,6 +74,11 @@ public final class SigilApiImpl implements SigilAPI {
     @Override
     public dev.bwmp.sigil.api.scheduler.SigilScheduler scheduler() {
         return plugin.scheduler();
+    }
+
+    @Override
+    public DisplayService displays() {
+        return plugin.displays();
     }
 
     @Override

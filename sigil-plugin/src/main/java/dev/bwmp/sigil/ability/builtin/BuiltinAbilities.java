@@ -19,6 +19,8 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.potion.PotionEffect;
@@ -43,7 +45,6 @@ public final class BuiltinAbilities {
     private BuiltinAbilities() {
     }
 
-    /** Every built-in type, keyed by the id YAML refers to it by. */
     public static Map<String, AbilityType> all() {
         Map<String, AbilityType> types = new LinkedHashMap<>();
         types.put("launch", BuiltinAbilities::launch);
@@ -91,7 +92,6 @@ public final class BuiltinAbilities {
         return Set.of(binding);
     }
 
-    /** A type whose behaviour is one function, sharing the common key handling. */
     private abstract static class ConfiguredAbility implements Ability {
         private final AbilityMeta meta;
         private final Set<TriggerBinding> triggers;
@@ -192,7 +192,8 @@ public final class BuiltinAbilities {
             @Override
             public ActionResult execute(AbilityContext context) {
                 Player player = context.player();
-                double max = player.getMaxHealth();
+                AttributeInstance maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                double max = maxHealth == null ? player.getHealth() : maxHealth.getValue();
                 if (player.getHealth() >= max) {
                     // Nothing to do, so no cooldown and no charge spent.
                     return ActionResult.fail();

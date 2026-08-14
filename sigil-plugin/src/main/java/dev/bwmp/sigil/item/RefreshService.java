@@ -43,7 +43,6 @@ public final class RefreshService {
         return factory.rerender(stack, resolved);
     }
 
-    /** Refreshes everything a player is carrying. Returns how many changed. */
     public int refreshInventory(Player player) {
         int changed = 0;
         for (ItemStack stack : player.getInventory().getContents()) {

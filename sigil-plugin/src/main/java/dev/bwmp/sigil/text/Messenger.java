@@ -39,11 +39,6 @@ public final class Messenger {
         messages.audience(target).sendActionBar(parse(miniMessage));
     }
 
-    /**
-     * Parsed with the trusted resolver, matching how item names and lore are
-     * rendered. Add-on text is plugin-authored, not player-authored — the
-     * untrusted parser exists for the latter.
-     */
     private Component parse(String miniMessage) {
         return KeystoneText.parse(miniMessage);
     }

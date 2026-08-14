@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/** The {@code /sigil} command tree. */
 public final class SigilCommand {
 
     private final SigilPlugin plugin;

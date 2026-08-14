@@ -40,9 +40,10 @@ public final class DefinitionWriter {
         namespaceDirectory.mkdirs();
 
         YamlConfiguration yaml = new YamlConfiguration();
-        yaml.options().header("Sigil item: " + definition.id()
-                + "\nEdit freely. Sigil never rewrites this file once it exists."
-                + "\nRun /sigil reload to apply changes; items already in inventories update themselves.");
+        yaml.options().setHeader(List.of(
+                "Sigil item: " + definition.id(),
+                "Edit freely. Sigil never rewrites this file once it exists.",
+                "Run /sigil reload to apply changes; items already in inventories update themselves."));
 
         yaml.set("enabled", definition.enabled());
         yaml.set("display", definition.displayName());

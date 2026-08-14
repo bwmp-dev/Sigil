@@ -41,6 +41,7 @@ import dev.bwmp.sigil.recipe.RecipeService;
 import dev.bwmp.sigil.registry.RegistrySnapshot;
 import dev.bwmp.sigil.registry.SigilRegistries;
 import dev.bwmp.sigil.text.Messenger;
+import dev.bwmp.sigil.visual.DisplayEffectService;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.ServicePriority;
@@ -73,6 +74,7 @@ public final class SigilPlugin extends JavaPlugin {
     private SchedulerBridge scheduler;
     private LootService lootService;
     private PlayerStores playerStores;
+    private DisplayEffectService displays;
 
     /**
      * Items registered through the API by other plugins.
@@ -99,6 +101,7 @@ public final class SigilPlugin extends JavaPlugin {
         OwnedRegistry<AbilityType> abilityTypes = keystone.registry("ability type");
         registries = new SigilRegistries(abilityTypes);
         scheduler = new SchedulerBridge(keystone.scheduler());
+        displays = new DisplayEffectService(this, scheduler);
 
         playerStores = new PlayerStores(getDataFolder(), getLogger());
         keys = new Keys(this);
@@ -118,6 +121,7 @@ public final class SigilPlugin extends JavaPlugin {
         lootService = new LootService(this, registries);
         lootService.reload();
         registerListeners();
+        getServer().getPluginManager().registerEvents(displays, this);
         registerCommand();
 
         getServer().getServicesManager().register(SigilAPI.class, new SigilApiImpl(this),
@@ -142,6 +146,9 @@ public final class SigilPlugin extends JavaPlugin {
     public void onDisable() {
         if (playerWatch != null) {
             playerWatch.stop();
+        }
+        if (displays != null) {
+            displays.shutdown();
         }
         if (playerStores != null) {
             // Before the service is unregistered, so an add-on shutting down
@@ -272,7 +279,6 @@ public final class SigilPlugin extends JavaPlugin {
         });
     }
 
-    /** Re-reads everything and republishes. Keeps the old set if loading fails. */
     public void reloadSigil() {
         mainConfig.reload();
         messages.reload();
@@ -319,7 +325,6 @@ public final class SigilPlugin extends JavaPlugin {
         return recipes;
     }
 
-    /** Where {@link SigilApiImpl} records another plugin's items. Survives rebuilds. */
     public Map<NamespacedKey, ItemDefinition> apiDefinitions() {
         return apiDefinitions;
     }
@@ -350,5 +355,9 @@ public final class SigilPlugin extends JavaPlugin {
 
     public SchedulerBridge scheduler() {
         return scheduler;
+    }
+
+    public DisplayEffectService displays() {
+        return displays;
     }
 }

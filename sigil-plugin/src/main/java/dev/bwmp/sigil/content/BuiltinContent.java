@@ -12,6 +12,7 @@ import org.bukkit.NamespacedKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * The demo content, chosen so the set exercises every recipe type and a
@@ -22,7 +23,6 @@ import java.util.Map;
  */
 public final class BuiltinContent {
 
-    /** One item's code-side defaults plus the abilities bound to it. */
     public record Entry(ItemDefinition definition, List<Ability> abilities) {
     }
 
@@ -30,7 +30,7 @@ public final class BuiltinContent {
     }
 
     private static NamespacedKey key(String name) {
-        return new NamespacedKey("sigil", name);
+        return Objects.requireNonNull(NamespacedKey.fromString("sigil:" + name));
     }
 
     public static List<Entry> all() {

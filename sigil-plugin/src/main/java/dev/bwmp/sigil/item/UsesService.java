@@ -7,7 +7,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-/** Spending and merging item charges. */
 public final class UsesService {
 
     private final Keys keys;
@@ -116,7 +115,6 @@ public final class UsesService {
         return result;
     }
 
-    /** How much of the sacrifice a merge would actually absorb. */
     public int mergeSurplus(ItemStack target, ItemStack sacrifice, SigilItem item) {
         int max = item.definition().uses().max();
         int targetUses = Math.max(0, resolver.usesOf(target));

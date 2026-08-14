@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-/** Adapts a Bukkit configuration section to the published {@link AbilityConfig}. */
 public final class SectionAbilityConfig implements AbilityConfig {
 
     private final ConfigurationSection section;

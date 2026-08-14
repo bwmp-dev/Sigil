@@ -33,7 +33,6 @@ public final class PlayerStores {
                 key -> new YamlPlayerStore(new File(directory, key + ".yml"), logger));
     }
 
-    /** Flushes every store that has unsaved work. */
     public void saveAll() {
         stores.values().forEach(YamlPlayerStore::save);
     }

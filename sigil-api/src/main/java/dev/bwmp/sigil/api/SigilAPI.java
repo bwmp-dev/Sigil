@@ -7,6 +7,7 @@ import dev.bwmp.sigil.api.item.ItemDefinition;
 import dev.bwmp.sigil.api.item.Rarity;
 import dev.bwmp.sigil.api.loot.LootRule;
 import dev.bwmp.sigil.api.scheduler.SigilScheduler;
+import dev.bwmp.sigil.api.visual.DisplayService;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
@@ -62,6 +63,9 @@ public interface SigilAPI {
      * {@code BukkitRunnable} instead is what makes an add-on Folia-incompatible.
      */
     SigilScheduler scheduler();
+
+    /** Shared, lifecycle-managed display effects; unavailable before 1.19.4. */
+    DisplayService displays();
 
     Optional<Rarity> rarity(String id);
 

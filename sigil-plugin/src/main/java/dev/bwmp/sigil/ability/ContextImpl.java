@@ -15,7 +15,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Optional;
 
-/** The activation an ability is running from. */
 public final class ContextImpl implements AbilityContext {
 
     private final Player player;

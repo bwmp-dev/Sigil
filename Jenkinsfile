@@ -5,6 +5,7 @@
 // regression, which compiles perfectly and only fails at runtime.
 mavenPlugin(
     artifacts: 'sigil-plugin/target/Sigil-*.jar,sigil-api/target/sigil-api-*.jar',
+    downloads: 'sigil-plugin/target/Sigil-*.jar',
     verify: [
         jar:       'sigil-plugin/target/Sigil-*.jar',
         relocated: ['dev/bwmp/sigil/libs/keystone/', 'dev/bwmp/sigil/libs/kyori/'],

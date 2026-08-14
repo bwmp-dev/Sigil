@@ -15,7 +15,6 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.List;
 import java.util.UUID;
 
-/** Builds and re-renders stacks from definitions. */
 public final class ItemFactory {
 
     private final Keys keys;
