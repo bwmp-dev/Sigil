@@ -34,6 +34,7 @@ import dev.bwmp.sigil.listener.ProtectionListener;
 import dev.bwmp.sigil.listener.RefreshListener;
 import dev.bwmp.sigil.listener.TriggerListener;
 import dev.bwmp.sigil.loot.LootService;
+import dev.bwmp.sigil.metrics.SigilMetrics;
 import dev.bwmp.sigil.permission.Permissions;
 import dev.bwmp.sigil.recipe.RecipeService;
 import dev.bwmp.sigil.registry.RegistrySnapshot;
@@ -119,6 +120,10 @@ public final class SigilPlugin extends JavaPlugin {
         // Expired cooldowns are never removed by the normal path, so without a
         // sweep the map grows for the lifetime of the server.
         keystone.scheduler().runTimer(cooldowns::purgeExpired, 20L * 60, 20L * 60);
+
+        // Last, so every sampler it registers has something to read. Shutdown
+        // is wired to the Keystone handle, so there is nothing to undo.
+        SigilMetrics.start(this);
     }
 
     @Override
