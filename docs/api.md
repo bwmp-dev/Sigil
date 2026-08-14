@@ -91,6 +91,40 @@ Add `.cancelEvent()` to suppress the Bukkit event that triggered it.
 
 One instance is shared by every stack of the item. Per-player or per-item state belongs in the item's persistent data or in your own plugin.
 
+### Talking to the player
+
+```java
+ctx.actionBar("<gray>Shield <white>" + remaining + "<gray>/" + capacity);
+ctx.message("<red>Nothing to recall to.");
+```
+
+MiniMessage strings, not Components, for the reason in [Why the API looks the way it does](#why-the-api-looks-the-way-it-does). The action bar is usually the right channel — charge counts and failed lock-ons do not belong in chat history. Outside an ability, `api.send(sender, markup)` and `api.sendActionBar(player, markup)` do the same.
+
+### Shared helpers
+
+Two utility classes exist so that abilities agree with each other rather than each rolling their own geometry.
+
+`Targeting` answers "what did they mean":
+
+```java
+Targeting.pointInSight(player, 20);                 // always a Location, even aimed at sky
+Targeting.entityInSight(player, 30, 0.4);
+Targeting.groundBelow(location, 6);                 // where a deployable lands
+Targeting.inCone(origin, direction, 8, 30, Targeting.HOSTILE);
+Targeting.inLine(origin, direction, 24, 1.0, Targeting.excluding(player));
+Targeting.rangeToTerrain(origin, direction, 24);    // stop a beam at the wall
+```
+
+`Effects` reads the `sound`, `volume`, `pitch` and `particle` keys every type accepts, and draws the two shapes everything wants:
+
+```java
+Effects.sound(location, ctx.config(), Sound.ENTITY_GENERIC_EXPLODE);
+Effects.line(from, to, Particle.CRIT, 0.5);
+Effects.ring(centre, radius, Particle.FLAME, 32);
+```
+
+Use `Effects.sound` rather than `Sound.valueOf`: `Sound` stopped being an enum in 1.21.3, so `valueOf` is a `NoSuchMethodError` there rather than a catchable bad name. `Effects` goes through the string overload, which has worked unchanged since well before Sigil's 1.18.2 floor — and lets an owner name a resource-pack sound no constant covers.
+
 ### Scheduling
 
 Use `ctx.scheduler()`, never `BukkitRunnable`. It is what makes an ability work on Folia unchanged.
@@ -125,6 +159,16 @@ abilities:
     duration: 100
 ```
 
+`AbilityConfig` reads flat keys with a fallback for each, and nested ones for a type whose parameters have structure:
+
+```java
+config.getSection("stats").map(s -> s.getInt("damage", 4));
+config.getSections("stages");     // a YAML list of maps
+config.getKeys();
+```
+
+The nested accessors are `default` methods returning empty, so adding them could not break an existing implementation.
+
 The id's namespace must match your plugin. Registrations are dropped automatically when your plugin disables, so a reload cannot leave a handler pointing at a dead classloader.
 
 Throw `IllegalArgumentException` from `create` for a bad config — the message is shown to the admin against the offending file.
@@ -150,6 +194,35 @@ api.register(this, definition, new FreezeAbility());
 ```
 
 Your item gets its own YAML file like any other, so server owners can retune it without touching your code.
+
+---
+
+## Charges
+
+```java
+int uses = api.remainingUses(stack);        // -1 when unlimited
+int added = api.addUses(stack, 50);         // capped at the item's max
+```
+
+`addUses` reports what it actually added, not whether it worked. That is what lets a repair kit decline to spend itself on an item that was already full — the difference between a useful item and a trap.
+
+```java
+long ms = api.cooldownRemaining(player, stack, "grapple");
+```
+
+Read-only, and it does not start a cooldown. For a menu or an action-bar countdown.
+
+---
+
+## Loot
+
+```java
+api.registerLoot(this, LootRule.mob(itemId, EntityType.WITHER, 0.5));
+api.registerLoot(this, LootRule.chest(itemId, key("minecraft:chests/end_city_treasure"), 0.05, 1, 1));
+api.registerLoot(this, LootRule.source(itemId, key("terra:valkyrie_temple"), 0.30, 1, 1));
+```
+
+So a pack ships working drops rather than a README asking the owner to paste YAML. Rules registered here sit alongside `loot.yml` instead of replacing it, and are dropped when your plugin disables. The full constructor also takes `requirePlayerKill` and `lootingBonus`; see [the loot section of the item reference](items.md#generated-loot) for what those mean.
 
 ---
 

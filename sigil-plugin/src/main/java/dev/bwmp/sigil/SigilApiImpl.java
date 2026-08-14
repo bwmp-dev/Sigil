@@ -6,8 +6,11 @@ import dev.bwmp.sigil.api.ability.AbilityType;
 import dev.bwmp.sigil.api.item.CustomItem;
 import dev.bwmp.sigil.api.item.ItemDefinition;
 import dev.bwmp.sigil.api.item.Rarity;
+import dev.bwmp.sigil.api.loot.LootRule;
 import dev.bwmp.sigil.item.SigilItem;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
@@ -59,6 +62,21 @@ public final class SigilApiImpl implements SigilAPI {
     }
 
     @Override
+    public Collection<CustomItem> itemsWithTag(String tag) {
+        if (tag == null || tag.isBlank()) {
+            return List.of();
+        }
+        return plugin.registries().items().stream()
+                .filter(item -> item.definition().hasTag(tag))
+                .toList();
+    }
+
+    @Override
+    public dev.bwmp.sigil.api.scheduler.SigilScheduler scheduler() {
+        return plugin.scheduler();
+    }
+
+    @Override
     public Optional<Rarity> rarity(String id) {
         return plugin.registries().rarity(id);
     }
@@ -76,6 +94,51 @@ public final class SigilApiImpl implements SigilAPI {
     @Override
     public int remainingUses(ItemStack stack) {
         return plugin.resolver().usesOf(stack);
+    }
+
+    @Override
+    public int addUses(ItemStack stack, int amount) {
+        return plugin.resolver().idOf(stack)
+                .flatMap(plugin.registries()::sigilItem)
+                .map(item -> plugin.uses().restore(stack, item, amount))
+                .orElse(0);
+    }
+
+    @Override
+    public long cooldownRemaining(Player player, ItemStack stack, String abilityId) {
+        Optional<SigilItem> item = plugin.resolver().idOf(stack).flatMap(plugin.registries()::sigilItem);
+        if (item.isEmpty()) {
+            return 0L;
+        }
+        // The scope has to come from the ability itself: the same key under a
+        // different scope is a different cooldown, so guessing PLAYER here
+        // would silently report 0 for every stack-scoped charge item.
+        return item.get().abilities().stream()
+                .filter(ability -> ability.meta().id().equals(abilityId))
+                .findFirst()
+                .map(ability -> plugin.cooldowns().remaining(
+                        player, stack, item.get().id() + "/" + abilityId, ability.meta().scope()))
+                .orElse(0L);
+    }
+
+    @Override
+    public void registerLoot(Plugin owner, LootRule rule) {
+        plugin.loot().register(owner, rule);
+    }
+
+    @Override
+    public dev.bwmp.sigil.api.data.PlayerStore playerStore(Plugin owner) {
+        return plugin.playerStores().of(owner);
+    }
+
+    @Override
+    public void send(CommandSender target, String miniMessage) {
+        plugin.messenger().send(target, miniMessage);
+    }
+
+    @Override
+    public void sendActionBar(Player target, String miniMessage) {
+        plugin.messenger().sendActionBar(target, miniMessage);
     }
 
     @Override

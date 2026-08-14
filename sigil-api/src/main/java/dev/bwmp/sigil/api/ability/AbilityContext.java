@@ -48,4 +48,21 @@ public interface AbilityContext {
      * Folia without the ability knowing which backend it is on.
      */
     SigilScheduler scheduler();
+
+    /**
+     * Sends the holder a MiniMessage string.
+     * <p>
+     * A string rather than a Component for the reason given in
+     * {@code SigilScheduler}: Adventure is relocated inside Sigil's jar, so an
+     * ability compiled against a {@code Component} here would fail to link at
+     * runtime. Sigil parses it on the other side of the boundary.
+     */
+    void message(String miniMessage);
+
+    /**
+     * Same, on the action bar. Usually the right channel for ability feedback —
+     * charge counts, shield strength, a failed lock-on — none of which belongs
+     * in chat history.
+     */
+    void actionBar(String miniMessage);
 }

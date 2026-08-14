@@ -174,8 +174,15 @@ public final class DefinitionLoader {
         boolean enabled = yaml.getBoolean("enabled", fallback == null || fallback.enabled());
         String category = yaml.getString("category", fallback == null ? "" : fallback.category());
 
+        // Absent means "keep what the code registered", the same as every other
+        // key here. An explicitly empty list is how a file removes tags it
+        // inherited, which is not the same thing.
+        List<String> tags = yaml.contains("tags")
+                ? yaml.getStringList("tags")
+                : (fallback == null ? List.of() : fallback.tags());
+
         return Optional.of(new ItemDefinition(id, display, base, rarity, description, model, customModelData,
-                uses, rules, recipes, permission, enabled, category));
+                uses, rules, recipes, permission, enabled, category, tags));
     }
 
     private Uses parseUses(ConfigurationSection section, Uses fallback) {

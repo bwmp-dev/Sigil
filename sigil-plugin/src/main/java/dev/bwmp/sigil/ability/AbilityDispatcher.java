@@ -15,6 +15,7 @@ import dev.bwmp.sigil.item.SigilItem;
 import dev.bwmp.sigil.item.UsesService;
 import dev.bwmp.sigil.permission.Permissions;
 import dev.bwmp.sigil.registry.SigilRegistries;
+import dev.bwmp.sigil.text.Messenger;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -43,18 +44,20 @@ public final class AbilityDispatcher {
     private final CooldownService cooldowns;
     private final SigilScheduler scheduler;
     private final MessageService messages;
+    private final Messenger messenger;
     private final SigilSettings settings;
     private final Logger logger;
 
     public AbilityDispatcher(SigilRegistries registries, ItemResolver resolver, UsesService uses,
                              CooldownService cooldowns, SigilScheduler scheduler, MessageService messages,
-                             SigilSettings settings, Logger logger) {
+                             Messenger messenger, SigilSettings settings, Logger logger) {
         this.registries = registries;
         this.resolver = resolver;
         this.uses = uses;
         this.cooldowns = cooldowns;
         this.scheduler = scheduler;
         this.messages = messages;
+        this.messenger = messenger;
         this.settings = settings;
         this.logger = logger;
     }
@@ -143,7 +146,7 @@ public final class AbilityDispatcher {
                              TriggerBinding.Slot slot, Block block, Entity entity, Event event) {
         try {
             ContextImpl context = new ContextImpl(player, stack, item, trigger, slot, block, entity, event,
-                    AbilityConfig.EMPTY, resolver.usesOf(stack), scheduler);
+                    AbilityConfig.EMPTY, resolver.usesOf(stack), scheduler, messenger);
             ActionResult result = ability.execute(context);
             return result == null ? ActionResult.pass() : result;
         } catch (RuntimeException | LinkageError exception) {

@@ -54,6 +54,9 @@ public final class DefinitionWriter {
         if (!definition.category().isEmpty()) {
             yaml.set("category", definition.category());
         }
+        if (!definition.tags().isEmpty()) {
+            yaml.set("tags", definition.tags());
+        }
         if (definition.model() != null) {
             yaml.set("model", definition.model().toString());
         }

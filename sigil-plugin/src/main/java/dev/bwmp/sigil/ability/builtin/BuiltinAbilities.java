@@ -9,6 +9,7 @@ import dev.bwmp.sigil.api.ability.ActionResult;
 import dev.bwmp.sigil.api.ability.CooldownScope;
 import dev.bwmp.sigil.api.ability.Trigger;
 import dev.bwmp.sigil.api.ability.TriggerBinding;
+import dev.bwmp.sigil.api.util.Effects;
 import dev.bwmp.sigil.config.Parsers;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -350,19 +351,6 @@ public final class BuiltinAbilities {
     }
 
     private static void sound(Location location, AbilityConfig config, Sound fallback) {
-        String configured = config.getString("sound", null);
-        Sound sound = fallback;
-        if (configured != null) {
-            try {
-                sound = Sound.valueOf(configured.toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException ignored) {
-                // Keep the default rather than failing the ability over a
-                // cosmetic key.
-            }
-        }
-        if (location.getWorld() != null) {
-            location.getWorld().playSound(location, sound,
-                    (float) config.getDouble("volume", 1.0), (float) config.getDouble("pitch", 1.0));
-        }
+        Effects.sound(location, config, fallback);
     }
 }

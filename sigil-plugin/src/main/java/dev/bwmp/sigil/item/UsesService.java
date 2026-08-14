@@ -58,6 +58,37 @@ public final class UsesService {
     }
 
     /**
+     * Restores charges, capped at the definition's maximum.
+     * <p>
+     * Reports what it actually added rather than whether it succeeded, so a
+     * repair kit can decline to spend itself on an item that was already full —
+     * which is the difference between a useful item and a trap.
+     *
+     * @return charges added; 0 when the item is unlimited, already full, or
+     *         a spent husk the definition deletes at zero
+     */
+    public int restore(ItemStack stack, SigilItem item, int amount) {
+        Uses uses = item.definition().uses();
+        if (!uses.limited() || amount == 0) {
+            return 0;
+        }
+
+        int current = resolver.usesOf(stack);
+        if (current < 0) {
+            return 0;
+        }
+
+        int updated = Math.max(0, Math.min(uses.max(), current + amount));
+        if (updated == current) {
+            return 0;
+        }
+
+        write(stack, updated);
+        factory.rerender(stack, item);
+        return updated - current;
+    }
+
+    /**
      * Merges two stacks of the same item, summing charges.
      * <p>
      * Capped at the definition's maximum, and the excess stays on the sacrifice

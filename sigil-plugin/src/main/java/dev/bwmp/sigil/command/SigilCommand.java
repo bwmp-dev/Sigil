@@ -155,6 +155,10 @@ public final class SigilCommand {
         line(sender, "<gray>Rarity: <white>" + item.definition().rarityId());
         line(sender, "<gray>Category: <white>"
                 + (item.definition().category().isEmpty() ? "-" : item.definition().category()));
+        if (!item.definition().tags().isEmpty()) {
+            line(sender, "<gray>Tags: <white>"
+                    + KeystoneText.escape(String.join(", ", item.definition().tags())));
+        }
         line(sender, "<gray>Uses: <white>" + (item.definition().uses().limited()
                 ? item.definition().uses().max() + (item.definition().uses().deleteAtZero() ? " (breaks)" : "")
                 : "unlimited"));

@@ -1,5 +1,25 @@
-# Custom items added when a vanilla loot table is rolled. Each entry rolls
-# independently. "table" matches Bukkit's loot-table key. "source" matches a
-# marker placed on a Terra structure chest; use either selector or both.
+# Custom items added to loot that Minecraft generates. Each entry rolls
+# independently.
+#
+# Chest entries select on "table" (Bukkit's loot-table key), on "source" (a
+# marker placed on a Terra structure chest), or on both, in which case both
+# must match.
+#
+#   - table: minecraft:chests/end_city_treasure
+#     item: sigil:aether_ingot
+#     chance: 0.05
+#     min: 1
+#     max: 2
+#
+# Mob entries select on "mob" and are rolled when that entity dies.
+#
+#   - mob: WITHER
+#     item: sigil:wither_blade
+#     chance: 0.5
+#     require-player-kill: true   # false lets farms and fall damage drop it
+#     looting-bonus: 0.05         # added to chance per level of Looting
+#
+# "chance" is greater than 0 and at most 1. Amounts default to one and are
+# capped to the item's real stack size; limited-use items always drop singly.
 enabled: true
 entries: []

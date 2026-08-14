@@ -214,10 +214,10 @@ A `gate` line is not a mistake. It is Sigil telling you a smithing recipe was sk
 
 ---
 
-## Generated chest loot
+## Generated loot
 
-`plugins/Sigil/loot.yml` adds registered items to loot-table chests when their
-normal loot is generated. Each entry rolls independently:
+`plugins/Sigil/loot.yml` adds registered items to loot Minecraft generates.
+Each entry rolls independently:
 
 ```yaml
 entries:
@@ -249,3 +249,25 @@ entries:
 When both selectors are present, both must match. `/sigil reload` reloads this
 file. Loot is added only when Minecraft rolls an ungenerated chest for the
 first time; already-opened chests are not changed.
+
+### Mob drops
+
+An entry that names a `mob` is rolled when that entity dies instead.
+
+```yaml
+entries:
+  - mob: WITHER
+    item: sigil:wither_blade
+    chance: 0.5
+    require-player-kill: true
+    looting-bonus: 0.05
+```
+
+`require-player-kill` defaults to `true`. Turning it off means a mob farm mints
+the item, which for anything meant to be earned is the whole of the problem.
+`looting-bonus` is added to `chance` per level of Looting on the killing
+weapon, and the total is still capped at 1.
+
+An add-on can register the same rules from code, so a pack ships working drops
+without the server owner writing any of this. Those registrations sit alongside
+this file rather than replacing it — see [the API guide](api.md#loot).

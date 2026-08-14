@@ -21,6 +21,7 @@ import dev.bwmp.sigil.config.DefinitionLoader;
 import dev.bwmp.sigil.config.DefinitionWriter;
 import dev.bwmp.sigil.config.SigilSettings;
 import dev.bwmp.sigil.content.BuiltinContent;
+import dev.bwmp.sigil.data.PlayerStores;
 import dev.bwmp.sigil.item.ItemFactory;
 import dev.bwmp.sigil.item.ItemResolver;
 import dev.bwmp.sigil.item.Keys;
@@ -39,6 +40,7 @@ import dev.bwmp.sigil.permission.Permissions;
 import dev.bwmp.sigil.recipe.RecipeService;
 import dev.bwmp.sigil.registry.RegistrySnapshot;
 import dev.bwmp.sigil.registry.SigilRegistries;
+import dev.bwmp.sigil.text.Messenger;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.ServicePriority;
@@ -57,6 +59,7 @@ public final class SigilPlugin extends JavaPlugin {
     private SigilSettings settings;
     private ManagedConfig mainConfig;
     private MessageService messages;
+    private Messenger messenger;
 
     private Keys keys;
     private ItemResolver resolver;
@@ -69,6 +72,7 @@ public final class SigilPlugin extends JavaPlugin {
     private AbilityDispatcher dispatcher;
     private SchedulerBridge scheduler;
     private LootService lootService;
+    private PlayerStores playerStores;
 
     /**
      * Items registered through the API by other plugins.
@@ -89,12 +93,14 @@ public final class SigilPlugin extends JavaPlugin {
 
         mainConfig = new ManagedConfig(this, "config.yml");
         messages = keystone.messages();
+        messenger = new Messenger(messages);
         settings = SigilSettings.load(mainConfig);
 
         OwnedRegistry<AbilityType> abilityTypes = keystone.registry("ability type");
         registries = new SigilRegistries(abilityTypes);
         scheduler = new SchedulerBridge(keystone.scheduler());
 
+        playerStores = new PlayerStores(getDataFolder(), getLogger());
         keys = new Keys(this);
         resolver = new ItemResolver(keys, registries);
         factory = new ItemFactory(keys, keystone.items(),
@@ -105,7 +111,7 @@ public final class SigilPlugin extends JavaPlugin {
         recipes = new RecipeService(this, resolver);
 
         dispatcher = new AbilityDispatcher(registries, resolver, uses, cooldowns,
-                scheduler, messages, settings, getLogger());
+                scheduler, messages, messenger, settings, getLogger());
 
         registerBuiltinAbilityTypes();
         loadContent();
@@ -121,6 +127,12 @@ public final class SigilPlugin extends JavaPlugin {
         // sweep the map grows for the lifetime of the server.
         keystone.scheduler().runTimer(cooldowns::purgeExpired, 20L * 60, 20L * 60);
 
+        // Player data is written on a timer rather than on every change: a mana
+        // pool ticking down changes several times a second, and saving each one
+        // would be a file write per tick per add-on. Stores with nothing to
+        // write skip themselves.
+        keystone.scheduler().runTimer(playerStores::saveAll, 20L * 60, 20L * 60);
+
         // Last, so every sampler it registers has something to read. Shutdown
         // is wired to the Keystone handle, so there is nothing to undo.
         SigilMetrics.start(this);
@@ -130,6 +142,11 @@ public final class SigilPlugin extends JavaPlugin {
     public void onDisable() {
         if (playerWatch != null) {
             playerWatch.stop();
+        }
+        if (playerStores != null) {
+            // Before the service is unregistered, so an add-on shutting down
+            // after this still writes into a store that will be flushed.
+            playerStores.saveAll();
         }
         if (recipes != null) {
             recipes.unregisterAll();
@@ -268,7 +285,7 @@ public final class SigilPlugin extends JavaPlugin {
         uses = new UsesService(keys, factory, resolver);
         refreshService = new RefreshService(resolver, factory, registries);
         dispatcher = new AbilityDispatcher(registries, resolver, uses, cooldowns,
-                scheduler, messages, settings, getLogger());
+                scheduler, messages, messenger, settings, getLogger());
 
         loadContent();
         lootService.reload();
@@ -309,5 +326,29 @@ public final class SigilPlugin extends JavaPlugin {
 
     public Map<NamespacedKey, List<Ability>> apiAbilities() {
         return apiAbilities;
+    }
+
+    public UsesService uses() {
+        return uses;
+    }
+
+    public CooldownService cooldowns() {
+        return cooldowns;
+    }
+
+    public LootService loot() {
+        return lootService;
+    }
+
+    public Messenger messenger() {
+        return messenger;
+    }
+
+    public PlayerStores playerStores() {
+        return playerStores;
+    }
+
+    public SchedulerBridge scheduler() {
+        return scheduler;
     }
 }

@@ -28,6 +28,10 @@ import java.util.Objects;
  * @param permission   explicit permission node, or null to use the default
  * @param enabled      whether it is registered at all
  * @param category     free-form grouping for menus, e.g. "material"
+ * @param tags         free-form labels, for anything that has to select a
+ *                     <em>set</em> of items rather than one. Unlike
+ *                     {@code category} an item may carry several, which is what
+ *                     lets a rule say "any frost piece" without naming them
  */
 public record ItemDefinition(
         NamespacedKey id,
@@ -42,13 +46,39 @@ public record ItemDefinition(
         List<SigilRecipe> recipes,
         String permission,
         boolean enabled,
-        String category) {
+        String category,
+        List<String> tags) {
 
     public ItemDefinition {
         description = description == null ? List.of() : List.copyOf(description);
         recipes = recipes == null ? List.of() : List.copyOf(recipes);
         uses = uses == null ? Uses.infinite() : uses;
         rules = rules == null ? InteractionRules.inherit() : rules;
+        tags = tags == null ? List.of() : List.copyOf(tags);
+    }
+
+    /**
+     * The form without tags.
+     * <p>
+     * Kept so that adding {@code tags} did not break every plugin already
+     * constructing a definition — which, for a published record, is otherwise
+     * exactly what adding a component does.
+     */
+    public ItemDefinition(NamespacedKey id, String displayName, Material base, String rarityId,
+                          List<String> description, NamespacedKey model, int customModelData,
+                          Uses uses, InteractionRules rules, List<SigilRecipe> recipes,
+                          String permission, boolean enabled, String category) {
+        this(id, displayName, base, rarityId, description, model, customModelData,
+                uses, rules, recipes, permission, enabled, category, List.of());
+    }
+
+    public boolean hasTag(String tag) {
+        for (String held : tags) {
+            if (held.equalsIgnoreCase(tag)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

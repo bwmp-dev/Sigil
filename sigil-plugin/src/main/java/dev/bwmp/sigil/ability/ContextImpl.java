@@ -6,6 +6,7 @@ import dev.bwmp.sigil.api.ability.Trigger;
 import dev.bwmp.sigil.api.ability.TriggerBinding;
 import dev.bwmp.sigil.api.item.CustomItem;
 import dev.bwmp.sigil.api.scheduler.SigilScheduler;
+import dev.bwmp.sigil.text.Messenger;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -28,10 +29,11 @@ public final class ContextImpl implements AbilityContext {
     private final AbilityConfig config;
     private final int remainingUses;
     private final SigilScheduler scheduler;
+    private final Messenger messenger;
 
     public ContextImpl(Player player, ItemStack stack, CustomItem item, Trigger trigger, TriggerBinding.Slot slot,
                        Block block, Entity entity, Event event, AbilityConfig config, int remainingUses,
-                       SigilScheduler scheduler) {
+                       SigilScheduler scheduler, Messenger messenger) {
         this.player = player;
         this.stack = stack;
         this.item = item;
@@ -43,6 +45,7 @@ public final class ContextImpl implements AbilityContext {
         this.config = config == null ? AbilityConfig.EMPTY : config;
         this.remainingUses = remainingUses;
         this.scheduler = scheduler;
+        this.messenger = messenger;
     }
 
     @Override
@@ -101,5 +104,15 @@ public final class ContextImpl implements AbilityContext {
     @Override
     public SigilScheduler scheduler() {
         return scheduler;
+    }
+
+    @Override
+    public void message(String miniMessage) {
+        messenger.send(player, miniMessage);
+    }
+
+    @Override
+    public void actionBar(String miniMessage) {
+        messenger.sendActionBar(player, miniMessage);
     }
 }
