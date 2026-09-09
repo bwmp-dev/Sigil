@@ -1,7 +1,8 @@
 # Provenance pilot
 
-The manually dispatched `Provenance pilot` workflow builds the shaded plugin and
-checks the Keystone/Adventure relocations. Its default is build-only. Enable
+The `Provenance pilot` workflow builds the shaded plugin, checks the
+Keystone/Adventure relocations, and validates the committed configuration on
+every pull request and main push. Manual dispatch defaults to build-only. Enable
 `submit` only after the project is connected and the production API has an
 explicit GitHub Actions OIDC policy for this repository and workflow.
 
@@ -16,7 +17,11 @@ Do not treat these variables alone as server authorization.
 
 `provenance.yml` starts with Paper 1.20.6 build 151 and Java 21. The platform
 catalog and hosted runner must have that exact environment available. This is a
-first smoke test, not coverage of every server/version Sigil supports.
+first smoke test, not coverage of every server/version Sigil supports. The
+`apiFloor: 1.20.6` deliberately narrows this pilot to its single tested version;
+Sigil declares an actual plugin API floor of 1.18. Catalog and runner availability
+must be verified separately before submitting; this configuration is not evidence
+that either is available.
 
 The test requires plugin enablement, the bundled `sigil:ember_wand` item before
 and after reload, and clean shutdown. Networking is disabled. Release mode is
@@ -24,8 +29,15 @@ and after reload, and clean shutdown. Networking is disabled. Release mode is
 and Folia-specific behavior need later scenarios.
 
 `prepare.py` reads the release-managed Maven version, checks the final shaded
-JAR, prints its SHA-256, and writes the resolved configuration into the build
-directory. Submission success means the API accepted a candidate; inspect its
+JAR, prints its SHA-256, and rejects stale configuration artifact identity.
+The workflow submits `provenance.yml` unchanged from the checked-out commit.
+Release-please maintains its annotated version/path alongside the Maven versions.
+The unconditional validator uses the shared configuration package at the same
+pinned Provenance commit as the Action, with frozen dependencies. Only the
+separate, dispatch-gated submission job has OIDC permission; it downloads the
+JAR produced by the successful build job in the same run.
+
+Submission success means the API accepted a candidate; inspect its
 matrix and assertions in the console before claiming a passing test. This pilot
 does not report a green GitHub compatibility status merely for submission.
 
@@ -34,4 +46,6 @@ Local build:
 ```sh
 mvn -B -ntp -s .github/provenance/maven-settings.xml verify
 python3 .github/provenance/prepare.py
+# After building the pinned shared config-schema package:
+node .github/provenance/validate.mjs /path/to/provenance/packages/config-schema/dist/index.js
 ```

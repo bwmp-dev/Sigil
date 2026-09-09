@@ -20,12 +20,14 @@ with zipfile.ZipFile(artifact) as jar:
     if "dev/bwmp/sigil/SigilPlugin.class" not in names:
         raise SystemExit("Missing plugin entrypoint")
 
-# The Action validates the complete YAML against the Provenance schema.
+# The checked-in configuration is the source-qualified execution authority.
+# Fail the build if a release changes Maven without updating its configuration.
 template = Path("provenance.yml").read_text()
-template = template.replace("version: 1.0.0\n", f"version: {version}\n", 1)
-template = template.replace("sigil-plugin/target/Sigil-1.0.0.jar", str(artifact), 1)
-Path("sigil-plugin/target/provenance.yml").write_text(template)
-print(f"Artifact: {artifact}; SHA-256: {hashlib.sha256(artifact.read_bytes()).hexdigest()}")
+if f"  version: {version} # x-release-please-version" not in template or f"  path: {artifact} # x-release-please-version" not in template:
+    raise SystemExit("Committed provenance.yml artifact version/path is stale")
+print("Shaded entrypoint and Keystone/Adventure relocation checks passed")
+digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+print(f"Artifact: {artifact}; SHA-256: {digest}")
 if os.environ.get("GITHUB_OUTPUT"):
     with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-        output.write(f"artifact={artifact}\nversion={version}\n")
+        output.write(f"artifact={artifact}\nversion={version}\nsha256={digest}\n")
