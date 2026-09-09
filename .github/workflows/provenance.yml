@@ -107,6 +107,7 @@ jobs:
           test -n "$PROJECT_ID" || { echo 'Connect Sigil and set PROVENANCE_PROJECT_ID'; exit 1; }
           test -n "$AUDIENCE" || { echo 'Configure OIDC policy and set PROVENANCE_AUDIENCE'; exit 1; }
       - name: Submit test-only candidate
+        id: submission
         uses: bwmp-dev/provenance/packages/action@f886ee7fe6729d676ada4baee27196e2295b6c26
         with:
           artifact: ${{ needs.build.outputs.artifact }}
@@ -121,3 +122,35 @@ jobs:
           max-artifact-bytes: '33554432'
           wait: 'false'
           report: none
+      - name: Record submission observation
+        if: always()
+        env:
+          CANDIDATE_ID: ${{ steps.submission.outputs.candidateId }}
+          ARTIFACT_ID: ${{ steps.submission.outputs.artifactId }}
+          OUTCOME: ${{ steps.submission.outputs.outcome }}
+          REASON: ${{ steps.submission.outputs.reason }}
+          PROJECT_ID: ${{ vars.PROVENANCE_PROJECT_ID }}
+        run: |
+          python3 - <<'PYOBSERVE'
+          import os
+          import re
+
+          uuid = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+          enum = re.compile(r"[a-z_]{1,64}")
+          values = {}
+          for name, pattern in (("CANDIDATE_ID", uuid), ("ARTIFACT_ID", uuid), ("OUTCOME", enum), ("REASON", enum), ("PROJECT_ID", uuid)):
+              value = os.environ.get(name, "")
+              values[name] = value if pattern.fullmatch(value) else ""
+          lines = ["## Provenance submission", ""]
+          for name in ("OUTCOME", "REASON", "CANDIDATE_ID", "ARTIFACT_ID"):
+              value = values[name] or "not available"
+              line = f"{name.lower()}: {value}"
+              print(line)
+              lines.append(f"- {line}")
+          if values["CANDIDATE_ID"] and values["PROJECT_ID"]:
+              url = f"https://provenance.bwmp.dev/app/projects/{values['PROJECT_ID']}/candidates/{values['CANDIDATE_ID']}/"
+              lines.extend(["", f"[Inspect candidate in the console]({url})"])
+          lines.extend(["", "Submitted means accepted by the API; it does not establish that runtime tests passed."])
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write("\n".join(lines) + "\n")
+          PYOBSERVE
