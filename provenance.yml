@@ -17,6 +17,26 @@ paper:
     paperBuild: 151
     javaVersion: 21
     policy: required
+  - id: paper-1.21.4
+    minecraftVersion: 1.21.4
+    paperBuild: 232
+    javaVersion: 21
+    policy: required
+  - id: paper-1.21.8
+    minecraftVersion: 1.21.8
+    paperBuild: 60
+    javaVersion: 21
+    policy: required
+  - id: paper-1.21.11
+    minecraftVersion: 1.21.11
+    paperBuild: 132
+    javaVersion: 21
+    policy: required
+  - id: paper-26.1.2
+    minecraftVersion: 26.1.2
+    paperBuild: 74
+    javaVersion: 25
+    policy: required
   gatePolicy:
     requiredFailure: block
     informationalFailure: report

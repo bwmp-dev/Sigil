@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: bwmp-dev/provenance
-          ref: f886ee7fe6729d676ada4baee27196e2295b6c26
+          ref: b4e587c2ab4d25bc5d9220ea2eb3e16a08da343d
           path: .provenance-validator
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -108,7 +108,7 @@ jobs:
           test -n "$AUDIENCE" || { echo 'Configure OIDC policy and set PROVENANCE_AUDIENCE'; exit 1; }
       - name: Submit test-only candidate
         id: submission
-        uses: bwmp-dev/provenance/packages/action@bc91bf81af01f2e005581667201d2478a8b187b6
+        uses: bwmp-dev/provenance/packages/action@b4e587c2ab4d25bc5d9220ea2eb3e16a08da343d
         with:
           artifact: ${{ needs.build.outputs.artifact }}
           configuration: provenance.yml
