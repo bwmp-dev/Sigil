@@ -1,0 +1,6 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0">
+  <profiles><profile><id>bwmp-nexus</id><repositories><repository>
+    <id>bwmp-nexus</id><url>https://nexus.bwmp.dev/repository/maven-public/</url>
+  </repository></repositories></profile></profiles>
+  <activeProfiles><activeProfile>bwmp-nexus</activeProfile></activeProfiles>
+</settings>

@@ -1,0 +1,54 @@
+name: Provenance pilot
+on:
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: Submit to the connected Provenance project (requires server OIDC policy)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Build and verify Sigil
+        run: mvn -B -ntp -s .github/provenance/maven-settings.xml verify
+      - name: Check shaded JAR and prepare configuration
+        id: artifact
+        run: python3 .github/provenance/prepare.py
+      - name: Check submission configuration
+        if: inputs.submit
+        env:
+          PROJECT_ID: ${{ vars.PROVENANCE_PROJECT_ID }}
+          AUDIENCE: ${{ vars.PROVENANCE_AUDIENCE }}
+        run: |
+          test -n "$PROJECT_ID" || { echo 'Connect Sigil and set PROVENANCE_PROJECT_ID'; exit 1; }
+          test -n "$AUDIENCE" || { echo 'Configure OIDC policy and set PROVENANCE_AUDIENCE'; exit 1; }
+      - name: Submit test-only candidate
+        if: inputs.submit
+        uses: bwmp-dev/provenance/packages/action@f886ee7fe6729d676ada4baee27196e2295b6c26
+        with:
+          artifact: ${{ steps.artifact.outputs.artifact }}
+          configuration: sigil-plugin/target/provenance.yml
+          version: ${{ steps.artifact.outputs.version }}
+          project: ${{ vars.PROVENANCE_PROJECT_ID }}
+          platform-origin: https://api.provenance.bwmp.dev
+          audience: ${{ vars.PROVENANCE_AUDIENCE }}
+          repository: ${{ github.repository }}
+          source-commit: ${{ github.sha }}
+          source-ref: ${{ github.ref }}
+          max-artifact-bytes: '33554432'
+          wait: 'false'
+          report: none

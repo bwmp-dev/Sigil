@@ -41,7 +41,7 @@
             something false, but bumping it alone changes nothing; the version
             that matters is the <parent> in sigil-plugin/pom.xml.
         -->
-        <keystone.version>1.0.2</keystone.version>
+        <keystone.version>1.1.0</keystone.version>
     </properties>
 
     <distributionManagement>
