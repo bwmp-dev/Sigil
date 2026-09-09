@@ -1,0 +1,123 @@
+name: Provenance pilot
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: Submit to the connected Provenance project (requires server OIDC policy)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    outputs:
+      artifact: ${{ steps.artifact.outputs.artifact }}
+      version: ${{ steps.artifact.outputs.version }}
+      sha256: ${{ steps.artifact.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Build and verify Sigil
+        run: mvn -B -ntp -s .github/provenance/maven-settings.xml verify
+      - name: Check shaded JAR and committed artifact identity
+        id: artifact
+        run: python3 .github/provenance/prepare.py
+      - name: Check out pinned configuration validator
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: bwmp-dev/provenance
+          ref: f886ee7fe6729d676ada4baee27196e2295b6c26
+          path: .provenance-validator
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+        with:
+          version: '11.20.0'
+          run_install: false
+      - name: Validate committed configuration against the shared schema
+        run: |
+          pnpm --dir .provenance-validator --filter @bwmp-dev/config-schema install --frozen-lockfile --ignore-scripts
+          pnpm --dir .provenance-validator --filter @bwmp-dev/config-schema build
+          node .github/provenance/validate.mjs .provenance-validator/packages/config-schema/dist/index.js
+      - name: Retain the exact tested JAR for submission
+        if: github.event_name == 'workflow_dispatch' && inputs.submit
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: provenance-pilot-jar
+          path: ${{ steps.artifact.outputs.artifact }}
+          if-no-files-found: error
+          retention-days: 1
+  submit:
+    if: github.event_name == 'workflow_dispatch' && inputs.submit
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: provenance-pilot-jar
+          path: sigil-plugin/target
+      - name: Verify downloaded bytes match the build
+        env:
+          EXPECTED_SHA256: ${{ needs.build.outputs.sha256 }}
+          ARTIFACT_PATH: ${{ needs.build.outputs.artifact }}
+        run: |
+          python3 - <<'PYVERIFY'
+          import hashlib
+          import os
+          from pathlib import Path
+          import re
+
+          expected = os.environ["EXPECTED_SHA256"]
+          artifact = Path(os.environ["ARTIFACT_PATH"])
+          if not re.fullmatch(r"[0-9a-f]{64}", expected):
+              raise SystemExit("Missing or invalid build artifact SHA-256")
+          if artifact.is_symlink() or not artifact.is_file():
+              raise SystemExit("Downloaded artifact is not a regular file")
+          actual = hashlib.sha256(artifact.read_bytes()).hexdigest()
+          if actual != expected:
+              raise SystemExit("Downloaded artifact differs from the verified build")
+          print(f"Downloaded artifact SHA-256 verified: {actual}")
+          PYVERIFY
+      - name: Check submission configuration
+        env:
+          PROJECT_ID: ${{ vars.PROVENANCE_PROJECT_ID }}
+          AUDIENCE: ${{ vars.PROVENANCE_AUDIENCE }}
+        run: |
+          test -n "$PROJECT_ID" || { echo 'Connect Sigil and set PROVENANCE_PROJECT_ID'; exit 1; }
+          test -n "$AUDIENCE" || { echo 'Configure OIDC policy and set PROVENANCE_AUDIENCE'; exit 1; }
+      - name: Submit test-only candidate
+        uses: bwmp-dev/provenance/packages/action@f886ee7fe6729d676ada4baee27196e2295b6c26
+        with:
+          artifact: ${{ needs.build.outputs.artifact }}
+          configuration: provenance.yml
+          version: ${{ needs.build.outputs.version }}
+          project: ${{ vars.PROVENANCE_PROJECT_ID }}
+          platform-origin: https://api.provenance.bwmp.dev
+          audience: ${{ vars.PROVENANCE_AUDIENCE }}
+          repository: ${{ github.repository }}
+          source-commit: ${{ github.sha }}
+          source-ref: ${{ github.ref }}
+          max-artifact-bytes: '33554432'
+          wait: 'false'
+          report: none

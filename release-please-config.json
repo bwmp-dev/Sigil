@@ -11,7 +11,8 @@
       "extra-files": [
         "pom.xml",
         "sigil-api/pom.xml",
-        "sigil-plugin/pom.xml"
+        "sigil-plugin/pom.xml",
+        "provenance.yml"
       ]
     }
   }

@@ -1,0 +1,70 @@
+apiVersion: provenance.dev/v1
+project:
+  id: sigil
+  name: Sigil
+artifact:
+  id: sigil
+  version: 1.0.0 # x-release-please-version
+  path: sigil-plugin/target/Sigil-1.0.0.jar # x-release-please-version
+paper:
+  recommendations:
+    enabled: false
+    apiFloor: 1.20.6
+    newVersions: informational
+  matrix:
+  - id: paper-1.20.6
+    minecraftVersion: 1.20.6
+    paperBuild: 151
+    javaVersion: 21
+    policy: required
+  gatePolicy:
+    requiredFailure: block
+    informationalFailure: report
+    infrastructureFailure: retry
+    maxInfrastructureRetries: 2
+dependencies: []
+tests:
+  startup:
+    timeoutSeconds: 120
+    stabilizationSeconds: 10
+    requirePluginEnabled: true
+    shutdownTimeoutSeconds: 30
+    requireCleanShutdown: true
+  console:
+  - id: list-items
+    command: sigil list
+    timeoutSeconds: 15
+    assertions:
+    - stream: combined
+      operator: contains
+      pattern: sigil:ember_wand
+      match: present
+  - id: reload
+    command: sigil reload
+    timeoutSeconds: 15
+    assertions:
+    - stream: combined
+      operator: contains
+      pattern: Reloaded.
+      match: present
+  - id: list-after-reload
+    command: sigil list
+    timeoutSeconds: 15
+    assertions:
+    - stream: combined
+      operator: contains
+      pattern: sigil:ember_wand
+      match: present
+release:
+  mode: test-only
+  targets: []
+network:
+  mode: none
+  allowlist: []
+resources:
+  cpuCores: 1
+  memoryMiB: 2048
+  diskMiB: 4096
+  processes: 256
+  wallTimeoutSeconds: 900
+  logBytes: 10485760
