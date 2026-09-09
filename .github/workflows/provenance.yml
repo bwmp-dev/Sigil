@@ -108,7 +108,7 @@ jobs:
           test -n "$AUDIENCE" || { echo 'Configure OIDC policy and set PROVENANCE_AUDIENCE'; exit 1; }
       - name: Submit test-only candidate
         id: submission
-        uses: bwmp-dev/provenance/packages/action@f886ee7fe6729d676ada4baee27196e2295b6c26
+        uses: bwmp-dev/provenance/packages/action@bc91bf81af01f2e005581667201d2478a8b187b6
         with:
           artifact: ${{ needs.build.outputs.artifact }}
           configuration: provenance.yml
