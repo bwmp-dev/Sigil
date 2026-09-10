@@ -15,11 +15,11 @@ No long-lived platform token is needed. The backend must validate repository,
 installation, source ref and workflow identity before issuing its scoped grant.
 Do not treat these variables alone as server authorization.
 
-`provenance.yml` starts with Paper 1.20.6 build 151 and Java 21. The platform
-catalog and hosted runner must have that exact environment available. This is a
-first smoke test, not coverage of every server/version Sigil supports. The
-`apiFloor: 1.20.6` deliberately narrows this pilot to its single tested version;
-Sigil declares an actual plugin API floor of 1.18. Catalog and runner availability
+`provenance.yml` selects five exact Paper builds, from 1.20.6 through 26.1.2,
+using Java 21 or 25. The platform and hosted runner must support those exact
+environments. This is a smoke-test matrix, not coverage of every server/version
+Sigil supports. The `apiFloor: 1.20.6` deliberately narrows the pilot's floor;
+Sigil declares an actual plugin API floor of 1.18. Runtime and runner availability
 must be verified separately before submitting; this configuration is not evidence
 that either is available.
 
@@ -30,7 +30,12 @@ and Folia-specific behavior need later scenarios.
 
 `prepare.py` reads the release-managed Maven version, checks the final shaded
 JAR, prints its SHA-256, and rejects stale configuration artifact identity.
-The workflow submits `provenance.yml` unchanged from the checked-out commit.
+For manual submission, `pilot.py` derives `provenance-pilot.yml` from that file,
+changing only `artifact.version` to a unique build-version/run-ID/attempt label.
+The candidate uses the identical label: dispatch requires these two identities
+to agree. The JAR bytes/path, test matrix, network policy and test-only release
+mode do not change. Reruns create distinct candidates rather than overwriting
+the history of an earlier test.
 Release-please maintains its annotated version/path alongside the Maven versions.
 The unconditional validator uses the shared configuration package at the same
 pinned Provenance commit as the Action, with frozen dependencies. Only the
