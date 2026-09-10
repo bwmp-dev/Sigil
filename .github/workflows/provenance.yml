@@ -31,6 +31,8 @@ jobs:
           java-version: '21'
       - name: Build and verify Sigil
         run: mvn -B -ntp -s .github/provenance/maven-settings.xml verify
+      - name: Verify run-scoped pilot configuration
+        run: python3 -m unittest discover -s .github/provenance -p 'test_*.py'
       - name: Check shaded JAR and committed artifact identity
         id: artifact
         run: python3 .github/provenance/prepare.py
@@ -106,15 +108,18 @@ jobs:
         run: |
           test -n "$PROJECT_ID" || { echo 'Connect Sigil and set PROVENANCE_PROJECT_ID'; exit 1; }
           test -n "$AUDIENCE" || { echo 'Configure OIDC policy and set PROVENANCE_AUDIENCE'; exit 1; }
+      - name: Derive matching test-only configuration and candidate version
+        id: pilot
+        env:
+          BUILD_VERSION: ${{ needs.build.outputs.version }}
+        run: python3 .github/provenance/pilot.py
       - name: Submit test-only candidate
         id: submission
         uses: bwmp-dev/provenance/packages/action@b4e587c2ab4d25bc5d9220ea2eb3e16a08da343d
         with:
           artifact: ${{ needs.build.outputs.artifact }}
-          configuration: provenance.yml
-          # Each test-only pilot is a distinct candidate, including reruns.
-          # This labels the candidate; it does not rebuild or alter the JAR.
-          version: ${{ needs.build.outputs.version }}-provenance.${{ github.run_id }}.${{ github.run_attempt }}
+          configuration: provenance-pilot.yml
+          version: ${{ steps.pilot.outputs.version }}
           project: ${{ vars.PROVENANCE_PROJECT_ID }}
           platform-origin: https://api.provenance.bwmp.dev
           audience: ${{ vars.PROVENANCE_AUDIENCE }}
