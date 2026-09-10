@@ -112,7 +112,9 @@ jobs:
         with:
           artifact: ${{ needs.build.outputs.artifact }}
           configuration: provenance.yml
-          version: ${{ needs.build.outputs.version }}
+          # Each test-only pilot is a distinct candidate, including reruns.
+          # This labels the candidate; it does not rebuild or alter the JAR.
+          version: ${{ needs.build.outputs.version }}-provenance.${{ github.run_id }}.${{ github.run_attempt }}
           project: ${{ vars.PROVENANCE_PROJECT_ID }}
           platform-origin: https://api.provenance.bwmp.dev
           audience: ${{ vars.PROVENANCE_AUDIENCE }}
