@@ -101,7 +101,7 @@ def run(env, transport=request, hide=mask, report=progress):
     if grant.get("principalType") != "github-actions" or grant.get("tokenType") != "Bearer" or any(grant["scope"].get(k) != v for k,v in expected.items()):
         raise ValueError("grant scope mismatch")
     expiry = datetime.fromisoformat(grant["expiresAt"].replace("Z", "+00:00"))
-    if not 120 < (expiry-datetime.now(timezone.utc)).total_seconds() <= 3600:
+    if not 30 < (expiry-datetime.now(timezone.utc)).total_seconds() <= 3600:
         raise ValueError("bounded unexpired grant required")
     report("grant_verified")
 

@@ -59,7 +59,8 @@ The probe binds the real grant to this repository, main ref, workflow, project a
 exact source. It permits only HTTPS R2 write-once upload, never sends the grant to
 storage, masks credentials/signed URLs and withholds response bodies on failure.
 It deliberately has no retry after uncertain writes. A failed attempt requires
-operator inspection; rerunning it creates a separate retained synthetic artifact.
+operator inspection; the fixed content identity may resolve to the retained
+artifact instead of creating another one, so do not blindly replay the probe.
 
 This proves artifact rejection only. The operator must separately retain actual
 hash-mismatch alert firing and its recovery after the 15-minute lookback expires.

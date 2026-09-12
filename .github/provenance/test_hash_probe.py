@@ -22,7 +22,7 @@ class Fixture:
         if url.endswith('/grants'):
             scope=dict(projectId=PROJECT,repositoryId='123',repositoryOwnerId='456',sourceCommit='a'*40,sourceRef='refs/heads/main',workflowRef='bwmp-dev/Sigil/.github/workflows/provenance.yml@refs/heads/main')
             if self.mode=='foreign':scope['projectId']=ARTIFACT
-            expiry=datetime.now(timezone.utc)+timedelta(minutes=10 if self.mode!='expired' else -1)
+            expiry=datetime.now(timezone.utc)+timedelta(minutes=-1 if self.mode=='expired' else 2 if self.mode=='short_grant' else 10)
             return 201,json.dumps(dict(accessToken='pva_'+'a'*42+'A',principalType='github-actions',tokenType='Bearer',scope=scope,expiresAt=expiry.isoformat())).encode()
         if url.endswith('/uploads'):
             upload=dict(artifactId=ARTIFACT,uploadUrl='https://fixture.r2.cloudflarestorage.com/test?signature=synthetic',expiresAt=(datetime.now(timezone.utc)+timedelta(minutes=5)).isoformat(),requiredHeaders={'If-None-Match':'*','Content-Type':'application/java-archive'})
@@ -55,6 +55,9 @@ class Tests(unittest.TestCase):
             f=Fixture();f.mode=mode
             with self.assertRaises(ValueError):f.run()
             self.assertEqual(len(f.calls),2)
+    def test_valid_two_minute_grant(self):
+        f=Fixture();f.mode='short_grant'
+        self.assertEqual(f.run()['state'],'rejected')
     def test_unsafe_storage_never_uploads(self):
         for mode in ('foreign_storage','credential_header','overwrite'):
             f=Fixture();f.mode=mode
