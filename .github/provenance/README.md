@@ -59,12 +59,21 @@ The probe binds the real grant to this repository, main ref, workflow, project a
 exact source. It permits only HTTPS R2 write-once upload, never sends the grant to
 storage, masks credentials/signed URLs and withholds response bodies on failure.
 It deliberately has no retry after uncertain writes. A failed attempt requires
-operator inspection; rerunning it creates a separate retained synthetic artifact.
+operator inspection; the fixed content identity may resolve to the retained
+artifact instead of creating another one, so do not blindly replay the probe.
 
 This proves artifact rejection only. The operator must separately retain actual
 hash-mismatch alert firing and its recovery after the 15-minute lookback expires.
 Do not manually edit alert/audit rows or count this as private-repository, plugin,
 publication, or full-alpha acceptance. The existing policy variables above apply.
+
+The first operational run `34712339409` stopped with its sanitized failure before
+completing. A read-only HTTP comparison showed that the edge refused Python's
+default identity (403), while an explicit `provenance-alpha-hash-probe/1.0`
+identity reached API health (200). The probe now identifies itself explicitly
+and emits only closed progress codes, never arbitrary errors or response bodies.
+That comparison identifies a client interoperability defect; it is not itself
+artifact-rejection or alert acceptance. Retain the original failed run.
 
 Local build:
 
