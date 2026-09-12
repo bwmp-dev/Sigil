@@ -9,6 +9,10 @@ on:
         description: Submit to the connected Provenance project (requires server OIDC policy)
         type: boolean
         default: false
+      hash_mismatch_probe:
+        description: Operator-only synthetic artifact rejection alert exercise (cannot combine with submit)
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -22,6 +26,9 @@ jobs:
       version: ${{ steps.artifact.outputs.version }}
       sha256: ${{ steps.artifact.outputs.sha256 }}
     steps:
+      - name: Refuse combined submission and rejection exercise
+        if: github.event_name == 'workflow_dispatch' && inputs.submit && inputs.hash_mismatch_probe
+        run: exit 1
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
@@ -64,7 +71,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
   submit:
-    if: github.event_name == 'workflow_dispatch' && inputs.submit
+    if: github.event_name == 'workflow_dispatch' && inputs.submit && !inputs.hash_mismatch_probe
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -161,3 +168,21 @@ jobs:
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
               summary.write("\n".join(lines) + "\n")
           PYOBSERVE
+  hash-mismatch-probe:
+    if: github.event_name == 'workflow_dispatch' && inputs.hash_mismatch_probe && !inputs.submit
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Exercise actual artifact hash rejection without a candidate
+        env:
+          PROVENANCE_HASH_PROBE: 'true'
+          PROVENANCE_PROJECT_ID: ${{ vars.PROVENANCE_PROJECT_ID }}
+          PROVENANCE_AUDIENCE: ${{ vars.PROVENANCE_AUDIENCE }}
+        run: python3 .github/provenance/hash_probe.py

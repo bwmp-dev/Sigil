@@ -46,6 +46,26 @@ Submission success means the API accepted a candidate; inspect its
 matrix and assertions in the console before claiming a passing test. This pilot
 does not report a green GitHub compatibility status merely for submission.
 
+## Explicit operational hash-rejection exercise
+
+Manual dispatch also provides `hash_mismatch_probe`, default false and mutually
+exclusive with `submit`. After the ordinary build/tests pass, its separate OIDC
+job uploads a tiny fixed synthetic payload with a deliberately different declared
+digest and requires HTTP422 plus durable rejected-artifact readback. It never
+creates a candidate, executes a plugin or publishes a release. Ordinary pushes,
+pull requests and normal submission retain their existing behavior.
+
+The probe binds the real grant to this repository, main ref, workflow, project and
+exact source. It permits only HTTPS R2 write-once upload, never sends the grant to
+storage, masks credentials/signed URLs and withholds response bodies on failure.
+It deliberately has no retry after uncertain writes. A failed attempt requires
+operator inspection; rerunning it creates a separate retained synthetic artifact.
+
+This proves artifact rejection only. The operator must separately retain actual
+hash-mismatch alert firing and its recovery after the 15-minute lookback expires.
+Do not manually edit alert/audit rows or count this as private-repository, plugin,
+publication, or full-alpha acceptance. The existing policy variables above apply.
+
 Local build:
 
 ```sh
