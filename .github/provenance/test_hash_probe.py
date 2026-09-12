@@ -2,6 +2,7 @@ import importlib.util
 import json
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timezone, timedelta
 
 spec=importlib.util.spec_from_file_location('probe',Path(__file__).with_name('hash_probe.py'))
@@ -32,7 +33,7 @@ class Fixture:
         if method=='PUT':return 200,b''
         if url.endswith('/complete'):return (202 if self.mode=='accepted' else 422),b'{}'
         return 200,json.dumps(dict(id=ARTIFACT,projectId=PROJECT,fileName='provenance-alpha-hash-probe.jar',state='ready' if self.mode=='not_rejected' else 'rejected',sha256=probe.DECLARED,sizeBytes=len(probe.PAYLOAD))).encode()
-    def run(self):return probe.run(ENV,self.request,self.masks.append)
+    def run(self):return probe.run(ENV,self.request,self.masks.append,lambda stage:None)
 
 class Tests(unittest.TestCase):
     def test_actual_flow_only_uploads_and_rejects(self):
@@ -73,5 +74,22 @@ class Tests(unittest.TestCase):
         init=json.loads(f.calls[2][3]);complete=json.loads(f.calls[4][3])
         self.assertEqual(init['sha256'],complete['sha256']);self.assertEqual(init['sizeBytes'],len(probe.PAYLOAD))
         self.assertNotEqual(f.calls[2][2]['Idempotency-Key'],f.calls[4][2]['Idempotency-Key'])
+    def test_transport_identifies_probe_without_impersonation(self):
+        class Response:
+            status=200
+            def __enter__(self):return self
+            def __exit__(self,*args):pass
+            def read(self,limit):return b'{}'
+        class Opener:
+            def open(self,req,timeout):
+                self.req=req
+                return Response()
+        opener=Opener()
+        with patch.object(probe.urllib.request,'build_opener',return_value=opener):
+            self.assertEqual(probe.request('GET',probe.ORIGIN+'/healthz',{}),(200,b'{}'))
+        self.assertEqual(opener.req.get_header('User-agent'),'provenance-alpha-hash-probe/1.0')
+    def test_progress_is_closed_and_credential_free(self):
+        f=Fixture();stages=[];probe.run(ENV,f.request,f.masks.append,stages.append)
+        self.assertEqual(stages,['context_verified','oidc_verified','grant_verified','upload_admitted','synthetic_bytes_uploaded','completion_rejected'])
 
 if __name__=='__main__':unittest.main()

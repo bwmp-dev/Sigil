@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime, timezone
 
 ORIGIN = "https://api.provenance.bwmp.dev"
+USER_AGENT = "provenance-alpha-hash-probe/1.0"
 PAYLOAD = b"provenance-alpha-hash-probe-B\n"
 DECLARED = hashlib.sha256(b"provenance-alpha-hash-probe-A\n").hexdigest()
 UUID = re.compile(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}")
@@ -33,7 +34,7 @@ def https(value, suffix=None):
 def request(method, url, headers, data=None):
     https(url)
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), RefuseRedirect())
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    req = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT, **headers}, method=method)
     try:
         response = opener.open(req, timeout=20)
     except urllib.error.HTTPError as error:
@@ -52,7 +53,11 @@ def mask(value):
     print("::add-mask::" + escaped, flush=True)
 
 
-def run(env, transport=request, hide=mask):
+def progress(stage):
+    print(json.dumps({"hashProbeStage":stage}),flush=True)
+
+
+def run(env, transport=request, hide=mask, report=progress):
     if (env.get("GITHUB_EVENT_NAME") != "workflow_dispatch"
             or env.get("GITHUB_REF") != "refs/heads/main"
             or env.get("GITHUB_REPOSITORY") != "bwmp-dev/Sigil"
@@ -66,6 +71,7 @@ def run(env, transport=request, hide=mask):
     for key in ("GITHUB_REPOSITORY_ID", "GITHUB_REPOSITORY_OWNER_ID"):
         if not re.fullmatch("[1-9][0-9]{0,19}", env.get(key, "")):
             raise ValueError("numeric repository identities required")
+    report("context_verified")
     oidc_url = https(env["ACTIONS_ID_TOKEN_REQUEST_URL"], ".actions.githubusercontent.com")
     query = urllib.parse.parse_qs(oidc_url.query, strict_parsing=True)
     query["audience"] = [audience]
@@ -79,6 +85,7 @@ def run(env, transport=request, hide=mask):
     if not isinstance(assertion, str) or len(assertion) > 16384 or not re.fullmatch(r"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", assertion):
         raise ValueError("invalid assertion")
     hide(assertion)
+    report("oidc_verified")
     status, raw = transport("POST", ORIGIN + "/v1/auth/github-actions/grants",
         {"Content-Type": "application/json", "Idempotency-Key": str(uuid.uuid4())},
         json.dumps({"assertion": assertion}).encode())
@@ -96,6 +103,7 @@ def run(env, transport=request, hide=mask):
     expiry = datetime.fromisoformat(grant["expiresAt"].replace("Z", "+00:00"))
     if not 120 < (expiry-datetime.now(timezone.utc)).total_seconds() <= 3600:
         raise ValueError("bounded unexpired grant required")
+    report("grant_verified")
 
     def call(method, path, payload=None):
         if datetime.now(timezone.utc) >= expiry: raise ValueError("grant expired")
@@ -111,6 +119,7 @@ def run(env, transport=request, hide=mask):
     if status != 201: raise ValueError("upload admission refused")
     upload=json.loads(raw);artifact=upload["artifactId"]
     if not isinstance(artifact,str) or not UUID.fullmatch(artifact):raise ValueError("invalid artifact identity")
+    report("upload_admitted")
     https(upload["uploadUrl"], ".r2.cloudflarestorage.com")
     hide(upload["uploadUrl"])
     if datetime.fromisoformat(upload["expiresAt"].replace("Z", "+00:00")) <= datetime.now(timezone.utc):
@@ -128,8 +137,10 @@ def run(env, transport=request, hide=mask):
     if "if-none-match" not in seen:raise ValueError("write-once upload required")
     status,_=transport("PUT",upload["uploadUrl"],headers,PAYLOAD)
     if status not in (200,201,204):raise ValueError("synthetic upload failed")
+    report("synthetic_bytes_uploaded")
     status,_=call("POST","/v1/artifacts/"+artifact+"/complete",{"sizeBytes":len(PAYLOAD),"sha256":DECLARED})
     if status != 422:raise ValueError("expected hash rejection was not returned")
+    report("completion_rejected")
     status,raw=call("GET","/v1/artifacts/"+artifact)
     record=json.loads(raw)
     if status!=200 or any(record.get(k)!=v for k,v in dict(id=artifact,projectId=project,fileName="provenance-alpha-hash-probe.jar",state="rejected",sha256=DECLARED,sizeBytes=len(PAYLOAD)).items()):

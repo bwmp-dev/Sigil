@@ -66,6 +66,14 @@ hash-mismatch alert firing and its recovery after the 15-minute lookback expires
 Do not manually edit alert/audit rows or count this as private-repository, plugin,
 publication, or full-alpha acceptance. The existing policy variables above apply.
 
+The first operational run `34712339409` stopped with its sanitized failure before
+completing. A read-only HTTP comparison showed that the edge refused Python's
+default identity (403), while an explicit `provenance-alpha-hash-probe/1.0`
+identity reached API health (200). The probe now identifies itself explicitly
+and emits only closed progress codes, never arbitrary errors or response bodies.
+That comparison identifies a client interoperability defect; it is not itself
+artifact-rejection or alert acceptance. Retain the original failed run.
+
 Local build:
 
 ```sh
